@@ -3,23 +3,32 @@
 
 from threading import Thread
 import subprocess as s
+import __main__
 
 
 def __run(commands):
+
+    outputs = []
 
     for i in range(n:=len(commands)):
 
         c = s.Popen(
             commands[i],
-            shell=True
+            shell=True,
+            stdout=s.PIPE,
+            stderr=s.PIPE,
+            universal_newlines=True
         )
-        c.wait()
+        stdout, stderr = c.communicate()
+        outputs.append(stdout if stdout else stderr)
+    return outputs
 
 
 def run():
 
-    global t
+    global t, outputs
 
+    outputs = []
     kms_server = "kms8.msguides.com"
 
     commands = [
@@ -28,5 +37,9 @@ def run():
         "cscript //nologo C:\Windows\System32\slmgr.vbs /ato"
     ]
 
-    t = Thread(target=__run, args=(commands,))
+    def store():
+        global outputs
+        outputs = __run(commands)
+
+    t = Thread(target=store)
     t.start()
