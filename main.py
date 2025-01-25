@@ -3,7 +3,8 @@
 # GitHub: @nrxss (aka neek - @neek8044)
 # License: Apache 2.0
 
-DEBUG_MODE = False
+DEBUG_MODE = True
+
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
@@ -40,7 +41,14 @@ def admin_status():
 if not admin_status():
 
     print("> Elevating process privileges.")
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv[1:] if is_compiled else sys.argv), None, 1)
+    ctypes.windll.shell32.ShellExecuteW(
+            None, 
+            "runas", 
+            sys.executable, 
+            " ".join(sys.argv[1:] if is_compiled else sys.argv), 
+            None, 
+            1
+        )
 
     if not admin_status():
 
@@ -91,6 +99,22 @@ class MainWindow(QMainWindow):
         self.loading_movie.start()
         self.layout.addWidget(self.loading_label)
 
+        if DEBUG_MODE == True:
+            self.debug_textbox = QTextEdit(self.central_widget)
+            self.debug_textbox.setReadOnly(True)
+            self.debug_textbox.setStyleSheet("color: white; background-color: black;")
+            self.debug_textbox.setFixedHeight(100)
+            self.layout.addWidget(self.debug_textbox)
+
+            # Redirect print to the textbox
+            class TextBoxStream:
+                def write(self, text):
+                    self.debug_textbox.append(text)
+                def flush(self):
+                    pass
+
+            sys.stdout = TextBoxStream()
+
         self.done.connect(self.close) # close pyqt window upon signal emit
 
 
@@ -113,6 +137,11 @@ class MainWindow(QMainWindow):
         
         print("> Command sequence completed.")
 
+        # Display subprocess outputs
+        if hasattr(self, 'debug_textbox'):
+            for output in act.outputs:
+                self.debug_textbox.append(f"Command output:\n{output}\n")
+    
         self.label.setText("Activation Completed")
         self.loading_movie.stop()
         self.loading_label.hide()
