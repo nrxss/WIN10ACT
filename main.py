@@ -3,7 +3,7 @@
 # GitHub: @nrxss (aka neek - @neek8044)
 # License: Apache 2.0
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 
 from PyQt6.QtWidgets import *
